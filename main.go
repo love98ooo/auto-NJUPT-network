@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -37,11 +36,11 @@ func createConfig(configPath string) (*Config, error) {
 	}
 	fmt.Println("请选择运营商（输入数字）: 1. CMCC; 2. CHINANET; 3. NJUPT;(默认为 NJUPT)")
 	var carrierIndex int
+	_, err = fmt.Scanln(&carrierIndex)
 	if err != nil {
 		print(err)
 		os.Exit(1)
 	}
-	print(carrierIndex)
 	switch carrierIndex {
 	case 1:
 		defaultConfig.Carrier = "cmcc"
@@ -67,7 +66,7 @@ func createConfig(configPath string) (*Config, error) {
 	}
 
 	// Write the default config to the file
-	err = ioutil.WriteFile(configPath, defaultConfigJSON, 0600)
+	err = os.WriteFile(configPath, defaultConfigJSON, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func readConfig() (*Config, error) {
 	}
 
 	// If the file exists, read and parse the config
-	configFile, err := ioutil.ReadFile(configPath)
+	configFile, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +132,11 @@ func getIP() (string, error) {
 
 func tryConnect(ip string, config *Config) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://p.njupt.edu.cn:802/eportal/portal/login?callback=dr1003&login_method=1&user_account=%2C0%2C"+config.Username+"%40"+config.Carrier+"&user_password="+config.Password+"&wlan_user_ip="+ip+"&wlan_user_ipv6=&wlan_user_mac=000000000000&wlan_ac_ip=&wlan_ac_name=&jsVersion=4.1.3&terminal_type=1&lang=zh-cn&v=2383&lang=zh", nil)
+	req, err := http.NewRequest(
+		"GET",
+		"https://p.njupt.edu.cn:802/eportal/portal/login?callback=dr1003&login_method=1&user_account=%2C0%2C"+config.Username+"%40"+config.Carrier+"&user_password="+config.Password+"&wlan_user_ip="+ip+"&wlan_user_ipv6=&wlan_user_mac=000000000000&wlan_ac_ip=&wlan_ac_name=&jsVersion=4.1.3&terminal_type=1&lang=zh-cn&v=2383&lang=zh",
+		nil,
+	)
 	if err != nil {
 		println(err)
 		return
